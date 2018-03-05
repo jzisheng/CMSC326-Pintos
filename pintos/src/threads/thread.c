@@ -139,6 +139,22 @@ thread_tick (void)
     intr_yield_on_return ();
 }
 
+/* Compares threads in a list */
+bool thread_less_wakeup(const struct list_elem *left,const struct list_elem *right,void *aux){
+  struct thread *t_left = list_entry(left, struct thread,timer_elem);
+  struct thread *t_right = list_entry(right, struct thread, timer_elem);
+  // First checks if sleep times of two threads are the same, if so compare by priority
+  // Highest priority should be at head of list
+  // Shortest time should be at head of list
+  printf("Compare ticks left: %d \n", t_left->priority);
+  printf("Compare ticks right: %d", t_right->priority);
+  if(t_left->ticks == t_right->ticks){
+    return (t_left->priority > t_right->priority);
+  } else{
+    return t_left->ticks < t_right->ticks;
+  }
+}
+
 /* Prints thread statistics. */
 void
 thread_print_stats (void) 
@@ -451,6 +467,8 @@ is_thread (struct thread *t)
 static void
 init_thread (struct thread *t, const char *name, int priority)
 {
+  // Initialize semaphore
+  sema_init (&t->timer_sema, 0);
   enum intr_level old_level;
 
   ASSERT (t != NULL);
