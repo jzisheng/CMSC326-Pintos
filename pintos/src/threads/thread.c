@@ -88,7 +88,6 @@ void
 thread_init (void) 
 {
   ASSERT (intr_get_level () == INTR_OFF);
-
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
@@ -198,6 +197,8 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+
+
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -468,7 +469,6 @@ static void
 init_thread (struct thread *t, const char *name, int priority)
 {
   // Initialize semaphore
-  sema_init (&t->timer_sema, 0);
   enum intr_level old_level;
 
   ASSERT (t != NULL);
@@ -482,6 +482,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+  sema_init (&t->timer_sema, 0);  // initialize semaphore for alarm
+  
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
