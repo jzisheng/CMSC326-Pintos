@@ -99,31 +99,16 @@ timer_sleep (int64_t ticks)
   if(ticks <= 0)
     return;
   
-  t->ticks=timer_ticks()+ticks;  
+  t->ticks=timer_ticks()+ticks;  // Calculate in ticks when thread should be woken
   printf("Thread put to sleep for %"PRId64" seconds \n",ticks);
+
   // Make sure interrupts are on
   ASSERT (intr_get_level () == INTR_ON);
-  
-  // Turn off interrupts
-  // enum intr_level old_level = intr_disable ();   
-  intr_disable(); 
-  // Calculate in ticks when thread should be woken
-  // list_insert_ordered (&timer_wait_list, &t->timer_elem, thread_less_wakeup, NULL);
-  if (list_empty(&timer_wait_list)) printf("list is empty\n");
-  list_push_back(&timer_wait_list,&t->timer_elem);
-  // Turn interrupts back on
-  // intr_set_level (old_level); 
-  intr_enable();
+  intr_disable(); // Turn off interrupts
+  list_insert_ordered (&timer_wait_list, &t->timer_elem, thread_less_wakeup, NULL);
+  intr_enable(); // Turn interrupts back on
   
   sema_down (&t->timer_sema);
-  
-  /*
-  int64_t start = timer_ticks ();
-
-  ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield (); 
-  */
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -202,19 +187,15 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-  // Disable interrupts
-  // enum intr_level old_level = intr_disable();
-  // intr_set_level (old_level);
+
   struct thread *t;
   struct list_elem *e;
-  printf("TIMER INTERRUPT \n");
-  e = list_head(&timer_wait_list);
-  //for(e = list_begin(&timer_wait_list); e!= list_end(&timer_wait_list); e=list_next(&timer_wait_list)){
+
+  /*e = list_head(&timer_wait_list);
   while((e = list_next(e)) != list_end(&timer_wait_list)){ 
     t = list_entry(e,struct thread,timer_elem); 
     printf("Thread list %"PRId64"\n",t->ticks);
-  }
-  /*enum intr_level old_level = intr_disable (); 
+  }*/
   printf("timer interrupt");
   struct thread *t;
   while(!list_empty(&timer_wait_list)){
@@ -225,7 +206,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
     sema_up(&t->timer_sema);
     list_pop_front(&timer_wait_list);
   }
-  intr_set_level(old_level);*/
 }
 /* Returns true if LOOPS iterations waits for more than one timer
    tick, otherwise false. */
