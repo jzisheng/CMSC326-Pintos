@@ -139,15 +139,25 @@ thread_tick (void)
 }
 
 /* Compares threads in a list */
-bool thread_less_wakeup(const struct list_elem *left,const struct list_elem *right,void *aux){
-  struct thread *t_left = list_entry(left, struct thread,timer_elem);
-  struct thread *t_right = list_entry(right, struct thread, timer_elem);
-  // First checks if sleep times of two threads are the same, if so compare by priority
+bool thread_less_wakeup(const struct list_elem *left,
+                        const struct list_elem *right, void *aux){
+  // Get thread that is being compared
+  struct thread *t_left = list_entry(left,
+                                     struct thread,
+                                     timer_elem);
+  // Get the next item in list that left thread is compared to
+  struct thread *t_right = list_entry(right,
+                                     struct thread,
+                                     timer_elem);
+
+  // First checks if ticks of two threads are the same, if so compare by priority
   // Highest priority should be at head of list
   // Shortest time should be at head of list
   if(t_left->ticks == t_right->ticks){
+    // Returns true if left thread tick time is greater than right tick time
     return (t_left->priority > t_right->priority);
   } else{
+    // Comprae priorities as tick times are similar
     return t_left->ticks < t_right->ticks;
   }
 }
@@ -195,8 +205,6 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-
-
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);

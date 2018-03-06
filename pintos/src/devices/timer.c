@@ -93,19 +93,21 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  struct thread *t = thread_current();
+  struct thread *t = thread_current(); // Get current thread
   if(ticks <= 0)
     return; // If thread tick length is zero, don't put it to sleep
   
-  t->ticks=timer_ticks()+ticks;  // Calculate in ticks when thread should be woken
-  // printf("Thread put to sleep for %"PRId64" seconds \n",ticks);
+  t->ticks=timer_ticks()+ticks;  // Calculate time when thread should be woken
 
   ASSERT (intr_get_level () == INTR_ON); // Make sure interrupts are on
   intr_disable(); // Turn off interrupts
+  // Insert the thread into the sleeping thread list, ordered from least to greatest:
+  // Thread_less_wakeup compares the threads based on tick time, and if tick times are
+  // the same, it orders by priority
   list_insert_ordered (&timer_wait_list, &t->timer_elem, thread_less_wakeup, NULL);
   intr_enable(); // Turn interrupts back on
   
-  sema_down (&t->timer_sema);
+  sema_down (&t->timer_sema); // Sleeps thread
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -177,27 +179,27 @@ timer_print_stats (void)
 {
   printf ("Timer: %"PRId64" ticks\n", timer_ticks ());
 }
-
+
 /* Timer interrupt handler. */
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-  /*struct list_elem *e;
-  e = list_head(&timer_wait_list);
-  while((e = list_next(e)) != list_end(&timer_wait_list)){ 
-    t = list_entry(e,struct thread,timer_elem); 
-    printf("Thread list %"PRId64"\n",t->ticks);
-  }*/
-  struct thread *t;
-  while(!list_empty(&timer_wait_list)){
-    t = list_entry(list_front(&timer_wait_list),struct thread, timer_elem);
-    if(ticks < t->ticks){
-      break;
-    }
-    sema_up(&t->timer_sema);
-    list_pop_front(&timer_wait_list);
+
+  // For loop to iterate through sleeping thread list timer_wait_list
+  struct list_elem *e; // Initialize iterating pointer for timer_wait_list
+  for (e = list_begin (&timer_wait_list);
+       e != list_end (&timer_wait_list);
+       e = list_next (e)) {
+    // Get thread from timer_elem in timer_wait_list
+    struct thread *t = list_entry (e, struct thread, timer_elem);
+    // As list is ordered, if the first item in list is not done yet
+    // don't waste time checking to see if next items in list are done
+    // as the list is from least time to greatest
+    if(ticks < t->ticks) break;
+    sema_up(&t->timer_sema); // Thread time is done, release semaphore
+    list_pop_front(&timer_wait_list); // Remove thread's timer_elem from head of list
   }
 }
 /* Returns true if LOOPS iterations waits for more than one timer
