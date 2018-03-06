@@ -145,8 +145,6 @@ bool thread_less_wakeup(const struct list_elem *left,const struct list_elem *rig
   // First checks if sleep times of two threads are the same, if so compare by priority
   // Highest priority should be at head of list
   // Shortest time should be at head of list
-  printf("Compare ticks left: %d \n", t_left->priority);
-  printf("Compare ticks right: %d", t_right->priority);
   if(t_left->ticks == t_right->ticks){
     return (t_left->priority > t_right->priority);
   } else{
@@ -483,7 +481,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   sema_init (&t->timer_sema, 0);  // initialize semaphore for alarm
-  
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);

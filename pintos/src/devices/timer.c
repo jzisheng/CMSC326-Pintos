@@ -184,11 +184,8 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-
-  struct thread *t;
-  struct list_elem *e;
-
-  /*e = list_head(&timer_wait_list);
+  /*struct list_elem *e;
+  e = list_head(&timer_wait_list);
   while((e = list_next(e)) != list_end(&timer_wait_list)){ 
     t = list_entry(e,struct thread,timer_elem); 
     printf("Thread list %"PRId64"\n",t->ticks);
