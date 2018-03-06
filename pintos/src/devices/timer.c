@@ -94,16 +94,13 @@ void
 timer_sleep (int64_t ticks) 
 {
   struct thread *t = thread_current();
-  // If thread tick length is zero, don't put it
-  // to sleep
   if(ticks <= 0)
-    return;
+    return; // If thread tick length is zero, don't put it to sleep
   
   t->ticks=timer_ticks()+ticks;  // Calculate in ticks when thread should be woken
-  printf("Thread put to sleep for %"PRId64" seconds \n",ticks);
+  // printf("Thread put to sleep for %"PRId64" seconds \n",ticks);
 
-  // Make sure interrupts are on
-  ASSERT (intr_get_level () == INTR_ON);
+  ASSERT (intr_get_level () == INTR_ON); // Make sure interrupts are on
   intr_disable(); // Turn off interrupts
   list_insert_ordered (&timer_wait_list, &t->timer_elem, thread_less_wakeup, NULL);
   intr_enable(); // Turn interrupts back on
@@ -196,7 +193,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
     t = list_entry(e,struct thread,timer_elem); 
     printf("Thread list %"PRId64"\n",t->ticks);
   }*/
-  printf("timer interrupt");
   struct thread *t;
   while(!list_empty(&timer_wait_list)){
     t = list_entry(list_front(&timer_wait_list),struct thread, timer_elem);
