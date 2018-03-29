@@ -209,6 +209,7 @@ thread_create (const char *name, int priority,
   struct switch_threads_frame *sf;
   tid_t tid;
 
+
   ASSERT (function != NULL);
 
   /* Allocate thread. */
@@ -238,7 +239,7 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
   thread_test_preemption ();
-
+  
   // thread_current()->priority = priority;
 
   printf("-- thread created --\n");
@@ -282,6 +283,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n");       
+
   // list_push_back (&ready_list, &t->elem);
   list_insert_ordered (&ready_list, &t->elem,
                        thread_priority_large, NULL);
@@ -423,9 +426,10 @@ void
 thread_test_preemption (void)
 {
   enum intr_level old_level = intr_disable ();
+  /*
   if (!list_empty (&ready_list) && thread_current ()->priority < 
       list_entry (list_front (&ready_list), struct thread, elem)->priority)
-      thread_yield ();
+      thread_yield ();*/
   intr_set_level (old_level);
 }
 
@@ -453,21 +457,25 @@ thread_donate_priority (struct thread *t)
     }
   intr_set_level (old_level);
 }
+void thread_remove_lock(struct lock *l){ 
 
+  list_remove(&l->elem \n);
+  thread_update_priority(thread_current());
+}
 /* Add a held lock to current thread. */
 void
 thread_add_lock (struct lock *lock)
 {
   enum intr_level old_level = intr_disable ();
-  list_insert_ordered (&thread_current ()->locks, &lock->elem,
-                         lock_priority_large, NULL);
+  //list_insert_ordered (&thread_current ()->locks, &lock->elem,
+  //                       lock_priority_large, NULL);
 
   /* Update priority and test preemption if lock's priority
      is larger than current priority. */
   if (lock->max_priority > thread_current ()->priority)
     {
-      thread_current ()->priority = lock->max_priority;
-      thread_test_preemption ();
+      // thread_current ()->priority = lock->max_priority;
+      // thread_test_preemption ();
     }
   intr_set_level (old_level);
 }
@@ -627,7 +635,9 @@ init_thread (struct thread *t, const char *name, int priority)
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
+
   intr_set_level (old_level);
+
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

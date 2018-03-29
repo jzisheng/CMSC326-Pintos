@@ -215,7 +215,7 @@ lock_acquire (struct lock *lock)
            && depth++ < 5)
       {
         l->max_priority = t->priority;        
-        thread_donate_priority (l->holder);
+        // thread_donate_priority (l->holder);
 
         l = l->holder->lock_waiting;
       }
@@ -263,6 +263,8 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
+
+  thread_remove_lock(lock);
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);

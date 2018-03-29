@@ -151,6 +151,7 @@ void thread_test_preemption (void);
 bool thread_priority_large(const struct list_elem *a,const struct list_elem *b,void *aux UNUSED);
 void thread_donate_priority (struct thread *t);
 void thread_add_lock (struct lock *lock);
+void thread_remove_lock(struct lock *l);
 
 int thread_get_nice (void);
 void thread_set_nice (int);
