@@ -518,8 +518,20 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
+  else{ /*
+    int zpriority = 0;
+    struct thread *highestpriority;
+    struct list_elem *e; // Initialize iterating pointer for ready_list
+    for (e = list_begin (&ready_list);e != list_end (&ready_list);e = list_next (e)) {
+      struct thread *t = list_entry (e, struct thread, elem);
+      if ((t->priority) > zpriority ){
+        highestpriority = &t;
+      }
+    }
+    return (&highestpriority); 
+    */
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
