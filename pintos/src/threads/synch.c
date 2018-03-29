@@ -214,8 +214,9 @@ lock_acquire (struct lock *lock)
     while (l && t->priority > l->max_priority
            && depth++ < 5)
       {
-        l->max_priority = t->priority;
-        // thread_donate_priority (l->holder);
+        l->max_priority = t->priority;        
+        thread_donate_priority (l->holder);
+
         l = l->holder->lock_waiting;
       }
   }

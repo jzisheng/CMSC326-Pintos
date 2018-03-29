@@ -20,6 +20,9 @@
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
+
+static struct list locks;
+
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
@@ -234,8 +237,14 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-  //thread_current()->priority = priority;
   thread_test_preemption ();
+
+  // thread_current()->priority = priority;
+
+  printf("-- thread created --\n");
+  printf("-- priority is now: %d \n",t->priority);
+  printf("-- initialized p  : %d \n",priority);
+  //t->priority = new_priority;
 
   return tid;
 }
@@ -388,7 +397,7 @@ thread_set_priority (int new_priority)
   // thread_current ()->priority = new_priority;
   enum intr_level old_level = intr_disable ();
   struct thread *t = thread_current ();
-  // int old_priority = t->priority;
+  int old_priority = t->priority;
 
   /* Always update base priority. */
   t->base_priority = new_priority;
@@ -396,14 +405,15 @@ thread_set_priority (int new_priority)
   /* Only update priority and test preemption if new priority
      is smaller and current priority is not donated by another
      thread. */
-  // if (new_priority < old_priority && list_empty (&t->locks))
-  //if (list_empty (&t->locks))
-  //  { 
+
+  if (new_priority < old_priority && list_empty (&t->locks))
+  if (list_empty (&t->locks))
+   { 
   //printf("-- priority lowered: %d \n",t->priority);
   t->priority = new_priority;
   //printf("-- new priorirty   : %d \n",t->priority);
   thread_test_preemption();
-  //  } 
+   } 
 
 
   intr_set_level (old_level);
@@ -431,10 +441,13 @@ thread_donate_priority (struct thread *t)
 {
   enum intr_level old_level = intr_disable ();
   thread_update_priority (t);
+
   /* If thread is in ready list, reorder it. */
   if (t->status == THREAD_READY)
     {
       list_remove (&t->elem);
+      printf("====\n");
+      printf("inserting ordered \n");
       list_insert_ordered (&ready_list, &t->elem,
                            thread_priority_large, NULL);
     }
@@ -446,8 +459,8 @@ void
 thread_add_lock (struct lock *lock)
 {
   enum intr_level old_level = intr_disable ();
-  // list_insert_ordered (&thread_current ()->locks, &lock->elem,
-  //                      lock_priority_large, NULL);
+  list_insert_ordered (&thread_current ()->locks, &lock->elem,
+                         lock_priority_large, NULL);
 
   /* Update priority and test preemption if lock's priority
      is larger than current priority. */
@@ -472,6 +485,7 @@ thread_update_priority (struct thread *t)
   if (!list_empty (&t->locks))
     {
       list_sort (&t->locks, lock_priority_large, NULL);
+
       lock_priority = list_entry (list_front (&t->locks),
                                   struct lock, elem)->max_priority;
       if (lock_priority > max_priority)
@@ -600,7 +614,13 @@ init_thread (struct thread *t, const char *name, int priority)
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
+
   t->priority = priority;
+  t->base_priority = priority;
+  t->priority = priority;
+  list_init (&locks);
+  t->lock_waiting = NULL;
+
   t->magic = THREAD_MAGIC;
 
   sema_init (&t->timer_sema, 0);  // initialize semaphore for alarm
