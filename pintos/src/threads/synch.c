@@ -203,8 +203,33 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  struct thread *t  = thread_current();
+  struct lock *l;
+  int depth = 0;
+
+  if (lock->holder != NULL){
+    t->lock_waiting = lock;
+    l = lock;
+    /* Do nested priority donation. */
+    while (l && t->priority > l->max_priority
+           && depth++ < 5)
+      {
+        l->max_priority = t->priority;
+        // thread_donate_priority (l->holder);
+        l = l->holder->lock_waiting;
+      }
+  }
+
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  t = thread_current ();
+
+  t->lock_waiting = NULL;
+  lock->max_priority = t->priority;
+  thread_add_lock (lock);
+
+  lock->holder = t;
+
+  // intr_set_level (old_level);
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -240,6 +265,16 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+}
+
+bool
+lock_priority_large (const struct list_elem *a,
+                     const struct list_elem *b,
+                     void *aux UNUSED)
+{
+  struct lock *la = list_entry (a, struct lock, elem);
+  struct lock *lb = list_entry (b, struct lock, elem);
+  return la->max_priority > lb->max_priority;
 }
 
 /* Returns true if the current thread holds LOCK, false
