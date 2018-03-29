@@ -96,6 +96,11 @@ struct thread
     struct semaphore timer_sema; // semaphore for thread
     struct list_elem timer_elem; 
 
+    // Used for priority scheduling
+    int base_priority;
+    struct list locks;
+    struct lock *lock_waiting;
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -136,8 +141,14 @@ void thread_yield (void);
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
 
+// Priority Scheduling
 int thread_get_priority (void);
+
 void thread_set_priority (int);
+void thread_test_preemption (void);
+
+bool thread_priority_large(const struct list_elem *a,const struct list_elem *b,void *aux UNUSED);
+
 
 int thread_get_nice (void);
 void thread_set_nice (int);
