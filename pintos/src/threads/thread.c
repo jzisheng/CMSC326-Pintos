@@ -283,7 +283,6 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n");       
 
   // list_push_back (&ready_list, &t->elem);
   list_insert_ordered (&ready_list, &t->elem,
@@ -458,24 +457,26 @@ thread_donate_priority (struct thread *t)
   intr_set_level (old_level);
 }
 void thread_remove_lock(struct lock *l){ 
-
-  list_remove(&l->elem \n);
+  enum intr_level old_level = intr_disable ();
+  list_remove(&l->elem);
   thread_update_priority(thread_current());
+  intr_set_level (old_level);
+
 }
 /* Add a held lock to current thread. */
 void
 thread_add_lock (struct lock *lock)
 {
   enum intr_level old_level = intr_disable ();
-  //list_insert_ordered (&thread_current ()->locks, &lock->elem,
-  //                       lock_priority_large, NULL);
+  list_insert_ordered (&thread_current ()->locks, &lock->elem,
+                          lock_priority_large, NULL);
 
   /* Update priority and test preemption if lock's priority
      is larger than current priority. */
   if (lock->max_priority > thread_current ()->priority)
     {
-      // thread_current ()->priority = lock->max_priority;
-      // thread_test_preemption ();
+      thread_current ()->priority = lock->max_priority;
+      thread_test_preemption ();
     }
   intr_set_level (old_level);
 }
@@ -626,7 +627,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->base_priority = priority;
   t->priority = priority;
-  list_init (&locks);
+  list_init (&t ->locks);
   t->lock_waiting = NULL;
 
   t->magic = THREAD_MAGIC;
