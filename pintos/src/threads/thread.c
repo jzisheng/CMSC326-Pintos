@@ -234,9 +234,10 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-  /* Add to run queue. */
+  // Add to runqueue
   thread_unblock (t);
-  thread_test_yield ();
+  // Check to see if there are any higher priority threads on ready list
+  thread_test_yield (); 
 
   return tid;
 }
@@ -268,18 +269,14 @@ thread_block (void)
 void
 thread_unblock (struct thread *t) 
 {
-  enum intr_level old_level;
-
   ASSERT (is_thread (t));
 
-  old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
 
-  // list_push_back (&ready_list, &t->elem);
+  // Add it to ready list based on priority
   list_insert_ordered (&ready_list, &t->elem,
                        thread_compare_priority, NULL);
   t->status = THREAD_READY;
-  intr_set_level (old_level);
 }
 
 /* Returns the name of the running thread. */
@@ -376,26 +373,23 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  // thread_current ()->priority = new_priority;
   enum intr_level old_level = intr_disable ();
   struct thread *t = thread_current ();
   int old_priority = t->priority;
 
-  /* Always update base priority. */
+  // Update intiial priority
   t->intial_priority = new_priority;
 
   /* Only update priority and test preemption if new priority
      is smaller and current priority is not donated by another
      thread. */
-
-  if (new_priority < old_priority && list_empty (&t->locks))
-  if (list_empty (&t->locks))
-   { 
-  //printf("-- priority lowered: %d \n",t->priority);
+  // If new priority is smaller and current priority not
+  //if (new_priority < old_priority && list_empty (&t->locks))
+  // if (list_empty (&t->locks))
+  //  { 
   t->priority = new_priority;
-  //printf("-- new priorirty   : %d \n",t->priority);
   thread_test_yield();
-   } 
+  //  } 
 
 
   intr_set_level (old_level);
@@ -406,9 +400,10 @@ thread_test_yield (void)
 {
   enum intr_level old_level = intr_disable ();
   
-  if (!list_empty (&ready_list) && thread_current ()->priority < 
-      list_entry (list_front (&ready_list), struct thread, elem)->priority)
-      thread_yield ();
+  if (!list_empty (&ready_list)){
+    int rl_top_priority = list_entry (list_front (&ready_list), struct thread, elem)->priority;
+    if( thread_current ()->priority < rl_top_priority) thread_yield ();
+  }
   intr_set_level (old_level);
 }
 
