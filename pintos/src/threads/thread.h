@@ -97,7 +97,7 @@ struct thread
     struct list_elem timer_elem; 
 
     // Used for priority scheduling
-    int base_priority;
+    int intial_priority;
     struct list locks;
     struct lock *lock_waiting;
 
@@ -143,12 +143,10 @@ void thread_foreach (thread_action_func *, void *);
 
 // Priority Scheduling
 int thread_get_priority (void);
-
 void thread_update_priority (struct thread *t);
 void thread_set_priority (int);
-void thread_test_preemption (void);
-
-bool thread_priority_large(const struct list_elem *a,const struct list_elem *b,void *aux UNUSED);
+void thread_test_yield (void);
+bool thread_compare_priority(const struct list_elem *a,const struct list_elem *b,void *aux UNUSED);
 void thread_donate_priority (struct thread *t);
 void thread_add_lock (struct lock *lock);
 void thread_remove_lock(struct lock *l);
