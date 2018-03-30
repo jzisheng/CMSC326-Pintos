@@ -377,21 +377,14 @@ thread_set_priority (int new_priority)
   struct thread *t = thread_current ();
   int old_priority = t->priority;
 
-  // Update intiial priority
+  // Update intial priority - this holds what the threads priority is before any donation happens
   t->intial_priority = new_priority;
 
-  /* Only update priority and test preemption if new priority
-     is smaller and current priority is not donated by another
-     thread. */
-
-  // FIGURE THIS OUT//
-  // If new priority is smaller and current priority not
-  if (list_empty (&t->locks))
-  { 
-  t->priority = new_priority;
-  thread_test_yield();
+  //only if the thread does not hold any locks
+  if (list_empty (&t->locks)){ 
+    t->priority = new_priority;
+    thread_test_yield();
   } 
-
 
   intr_set_level (old_level);
 }
@@ -430,13 +423,6 @@ thread_donate_priority (struct thread *t)
       list_insert_ordered (&ready_list, &t->elem,
                            thread_compare_priority, NULL);
     }
-  intr_set_level (old_level);
-}
-void thread_remove_lock(struct lock *lock){ 
-  enum intr_level old_level = intr_disable ();
-  // remove lock from list, update priority
-  list_remove (&lock->lelem);
-  thread_update_priority (thread_current ());
   intr_set_level (old_level);
 }
 // Add a held lock to the thread

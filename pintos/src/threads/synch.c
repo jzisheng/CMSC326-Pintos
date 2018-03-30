@@ -112,8 +112,9 @@ sema_up (struct semaphore *sema)
 
   ASSERT (sema != NULL);
 
+  //this is what insures that the thread with the highest priority thread waiting on a semaphore is woken up first
   if (!list_empty (&sema->waiters)) {
-
+    //the list of waiting threads is sorted based on priority
     list_sort (&sema->waiters, thread_compare_priority, NULL);
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                   struct thread, elem));
@@ -264,20 +265,21 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   old_level = intr_disable ();
-  //thread_remove_lock (lock);
-   //enum intr_level old_level = intr_disable ();
-  // remove lock from list, update priority
+  
+  // remove lock from the threads list of locks - the locks it holds
   list_remove (&lock->lelem);
-  thread_update_priority (thread_current ());
-  //intr_set_level (old_level);
-
-
+  /* makes the priority of the thread either its initial priority 
+  before it aquired the lock or if it holds other locks it gets 
+  the priority of the of the lock with the greatest max_priority */
+  thread_update_priority (thread_current ()); 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
   intr_set_level (old_level);
 }
 
+/* a compare function to give to list_insert_ordered. Used to insert the lock
+into the threads list of locks it holds according to the lock's max_priority */
 bool
 lock_compare_priority (const struct list_elem *l,
                      const struct list_elem *r,
