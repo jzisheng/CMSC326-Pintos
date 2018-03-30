@@ -264,7 +264,13 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   old_level = intr_disable ();
-  thread_remove_lock (lock);
+  //thread_remove_lock (lock);
+   //enum intr_level old_level = intr_disable ();
+  // remove lock from list, update priority
+  list_remove (&lock->lelem);
+  thread_update_priority (thread_current ());
+  //intr_set_level (old_level);
+
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
