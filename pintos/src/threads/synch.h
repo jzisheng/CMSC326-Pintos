@@ -22,7 +22,16 @@ struct lock
   {
     struct thread *holder;      /* Thread holding lock (for debugging). */
     struct semaphore semaphore; /* Binary semaphore controlling access. */
+
+    // Used for priority donation
+    struct list_elem lelem;
+    int max_priority; // Stores the priority of the highest priority thread that is
+                      // trying to acquire this lock
   };
+// Comparison function for locks
+bool lock_compare_priority (const struct list_elem *a,
+                   const struct list_elem *b,
+                   void *aux);
 
 void lock_init (struct lock *);
 void lock_acquire (struct lock *);
@@ -35,6 +44,10 @@ struct condition
   {
     struct list waiters;        /* List of waiting threads. */
   };
+
+bool cond_sema_compare_priority (const struct list_elem *a,
+                          const struct list_elem *b,
+                          void *aux );
 
 void cond_init (struct condition *);
 void cond_wait (struct condition *, struct lock *);
