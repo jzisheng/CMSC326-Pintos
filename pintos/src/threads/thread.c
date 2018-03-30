@@ -383,6 +383,8 @@ thread_set_priority (int new_priority)
   /* Only update priority and test preemption if new priority
      is smaller and current priority is not donated by another
      thread. */
+
+  // FIGURE THIS OUT//
   // If new priority is smaller and current priority not
   //if (new_priority < old_priority && list_empty (&t->locks))
   // if (list_empty (&t->locks))
