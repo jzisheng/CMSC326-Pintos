@@ -24,7 +24,7 @@ struct lock
     struct semaphore semaphore; /* Binary semaphore controlling access. */
 
     // Used for priority donation
-    struct list_elem elem;
+    struct list_elem lelem;
     int max_priority; // Stores the priority of the highest priority thread that is
                       // trying to acquire this lock
   };

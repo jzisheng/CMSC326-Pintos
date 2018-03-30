@@ -386,12 +386,11 @@ thread_set_priority (int new_priority)
 
   // FIGURE THIS OUT//
   // If new priority is smaller and current priority not
-  //if (new_priority < old_priority && list_empty (&t->locks))
-  // if (list_empty (&t->locks))
-  //  { 
+  if (list_empty (&t->locks))
+  { 
   t->priority = new_priority;
   thread_test_yield();
-  //  } 
+  } 
 
 
   intr_set_level (old_level);
@@ -422,7 +421,7 @@ thread_donate_priority (struct thread *t)
   enum intr_level old_level = intr_disable ();
   thread_update_priority (t);
 
-  /* If thread is in ready list, reorder it. */
+  // if thread is ready, reorder it
   if (t->status == THREAD_READY)
     {
       list_remove (&t->elem);
@@ -435,21 +434,21 @@ thread_donate_priority (struct thread *t)
 }
 void thread_remove_lock(struct lock *lock){ 
   enum intr_level old_level = intr_disable ();
-  /* Remove lock from list and update priority. */
-  list_remove (&lock->elem);
+  // remove lock from list, update priority
+  list_remove (&lock->lelem);
   thread_update_priority (thread_current ());
   intr_set_level (old_level);
 }
-/* Add a held lock to current thread. */
+// Add a held lock to the thread
 void
 thread_add_lock (struct lock *lock)
 {
   enum intr_level old_level = intr_disable ();
-  list_insert_ordered (&thread_current ()->locks, &lock->elem,
+  list_insert_ordered (&thread_current ()->locks, &lock->lelem,
                           lock_compare_priority, NULL);
 
-  /* Update priority and test preemption if lock's priority
-     is larger than current priority. */
+  // update priority and test yield if lock priority is larger
+  // than current priority
   if (lock->max_priority > thread_current ()->priority)
     {
       thread_current ()->priority = lock->max_priority;
@@ -458,22 +457,20 @@ thread_add_lock (struct lock *lock)
   intr_set_level (old_level);
 }
 
-/* Update thread's priority. This function only update
-   priority and do not preempt. */
+// Update thread priority
 void
 thread_update_priority (struct thread *t)
 {
   enum intr_level old_level = intr_disable ();
   int max_priority = t->intial_priority;
   int lock_priority;
-
-  /* Get locks' max priority. */
+  // get highest priority in locks
   if (!list_empty (&t->locks))
     {
       list_sort (&t->locks, lock_compare_priority, NULL);
 
       lock_priority = list_entry (list_front (&t->locks),
-                                  struct lock, elem)->max_priority;
+                                  struct lock, lelem)->max_priority;
       if (lock_priority > max_priority)
         max_priority = lock_priority;
     }

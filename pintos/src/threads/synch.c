@@ -225,7 +225,7 @@ lock_acquire (struct lock *lock)
   t->lock_waiting = NULL;
   lock->max_priority = t->priority;
   thread_add_lock (lock);
-  
+
   lock->holder = t;
   intr_set_level (old_level);
 }
@@ -277,8 +277,8 @@ lock_compare_priority (const struct list_elem *l,
                      const struct list_elem *r,
                      void *aux)
 {
-  struct lock *left = list_entry (l, struct lock, elem);
-  struct lock *right = list_entry (r, struct lock, elem);
+  struct lock *left = list_entry (l, struct lock, lelem);
+  struct lock *right = list_entry (r, struct lock, lelem);
   return left->max_priority > right->max_priority;
 }
 
@@ -319,7 +319,7 @@ cond_init (struct condition *cond)
    The monitor implemented by this function is "Mesa" style, not
    "Hoare" style, that is, sending and receiving a signal are not
    an atomic operation.  Thus, typically the caller must recheck
-   the condition after the wait completes and, if necessary, wait
+   thttps://www.linkedin.com/in/juanfbageshe condition after the wait completes and, if necessary, wait
    again.
 
    A given condition variable is associated with only a single
@@ -343,9 +343,6 @@ cond_wait (struct condition *cond, struct lock *lock)
   
   sema_init (&waiter.semaphore, 0);
   list_push_back (&cond->waiters, &waiter.elem);
-  //list_insert_ordered(&cond->waiters,&waiter->elem,cond_sema_priority_large)
-  //list_insert_ordered (&thread_current ()->locks, &lock->elem,
-  //                        lock_compare_priority, NULL);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
