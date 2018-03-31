@@ -389,6 +389,9 @@ thread_set_priority (int new_priority)
   intr_set_level (old_level);
 }
 
+/* checks to see if the current thread should run or if a thread off the ready-list should run
+(based on their priorities). If a thread off the ready_list should run instead then the curreent
+thread yields */
 void
 thread_test_yield (void)
 {
@@ -407,7 +410,8 @@ thread_get_priority (void)
 {
   return thread_current ()->priority;
 }
-
+/* calls thread_update_priority and then because the thread could now have a diffferent
+priority it reorders it in the ready_list */
 void
 thread_donate_priority (struct thread *t)
 {
@@ -425,7 +429,7 @@ thread_donate_priority (struct thread *t)
     }
   intr_set_level (old_level);
 }
-// Add a held lock to the thread
+// Add a held lock to the threads list of locks that it holds. 
 void
 thread_add_lock (struct lock *lock)
 {
@@ -443,7 +447,9 @@ thread_add_lock (struct lock *lock)
   intr_set_level (old_level);
 }
 
-// Update thread priority
+/* Update thread priority to the priority of the thread with the hishest priority 
+that is trying to acquire a lock the current thread holds, but only if it is greater 
+than the threads own initial_priority*/
 void
 thread_update_priority (struct thread *t)
 {
@@ -455,8 +461,9 @@ thread_update_priority (struct thread *t)
     {
       list_sort (&t->locks, lock_compare_priority, NULL);
 
-      lock_priority = list_entry (list_front (&t->locks),
-                                  struct lock, lelem)->max_priority;
+      lock_priority = list_entry (list_front (&t->locks), struct lock, lelem)->max_priority;
+      
+      //only update the priority to the priority of the lock if it is greater than the threads own initial priority
       if (lock_priority > max_priority)
         max_priority = lock_priority;
     }

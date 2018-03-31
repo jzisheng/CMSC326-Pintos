@@ -28,7 +28,7 @@ struct lock
     int max_priority; // Stores the priority of the highest priority thread that is
                       // trying to acquire this lock
   };
-// Comparison function for locks
+// Comparison function for locks that compares based on the max_priority 
 bool lock_compare_priority (const struct list_elem *a,
                    const struct list_elem *b,
                    void *aux);

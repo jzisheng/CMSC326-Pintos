@@ -97,9 +97,9 @@ struct thread
     struct list_elem timer_elem; 
 
     // Used for priority scheduling
-    int intial_priority;
-    struct list locks;
-    struct lock *lock_waiting;
+    int intial_priority; //threads priority before donation
+    struct list locks; //list of locks it holds
+    struct lock *lock_waiting; //pointer to the lock it is trying to acquire
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
